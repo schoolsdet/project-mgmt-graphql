@@ -1,0 +1,70 @@
+# This workflow aim to build and deploy the development version of PrestaShop
+name: Build And Deploy Development Branch
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  build-deploy:
+    name: Build and Deploy
+
+    runs-on: ubuntu-latest
+
+    env:
+      RELEASE_DIR: '/tmp/project-mgmt-graphql'
+
+    #todo: add build tests
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+          ref: ${{ env.GH_BRANCH }}
+
+      - name: Prepare directories
+        uses: appleboy/ssh-action@v0.1.5
+        with:
+          host: ${{ secrets.HOST }}
+          key: ${{ secrets.SSH_KEY }}
+          username: ${{ secrets.USERNAME }}
+          script_stop: true
+          port: ${{ secrets.PORT }}
+          script: |
+            rm -rf ${{ env.RELEASE_DIR }}
+            mkdir -p ${{ env.RELEASE_DIR }}
+      - name: Copy single file to remote
+        uses: garygrossgarten/github-action-scp@release
+        with:
+          local: ./
+          remote: ${{ env.RELEASE_DIR }}
+          username: ${{ secrets.USERNAME }}
+          host: ${{ secrets.HOST }}
+          privateKey : ${{ secrets.SSH_KEY }}
+
+      # https://devdocs.prestashop-project.org/1.7/basics/keeping-up-to-date/upgrade/
+      - name: Docker Compose Up
+        uses: appleboy/ssh-action@v0.1.5
+        env:
+          MONGO_INITDB_ROOT_PASSWORD: ${{ secrets.MONGO_INITDB_ROOT_PASSWORD }}
+          MONGO_USER: ${{ secrets.MONGO_USER }}
+          MONGO_PASSWORD: ${{ secrets.MONGO_PASSWORD }}
+          PROXY_PORT: ${{ secrets.PROXY_PORT }}
+
+        with:
+          host: ${{ secrets.HOST }}
+          key: ${{ secrets.SSH_KEY }}
+          username: ${{ secrets.USERNAME }}
+          port: ${{ secrets.PORT }}
+          script_stop: true
+          envs: "MONGO_INITDB_ROOT_PASSWORD,MONGO_USER,MONGO_PASSWORD,PROXY_PORT"
+          script: |
+            export MONGO_INITDB_ROOT_PASSWORD=${MONGO_INITDB_ROOT_PASSWORD}
+            export MONGO_USER=${MONGO_USER}
+            export MONGO_PASSWORD=${MONGO_PASSWORD}
+            export PROXY_PORT=${PROXY_PORT}
+            cd ${{ env.RELEASE_DIR }}
+            docker-compose up -d --no-deps --build
