@@ -6,7 +6,7 @@ export default function Header() {
       <div className='container'>
         <a className='navbar-brand' href='/'>
           <div className='d-flex'>
-            <img src={logo} alt='logo' />
+            <img src={logo} alt='logo' className='mr-2' />
             <div>Project Management @SDET School - Simple GraphQL App</div>
           </div>
         </a>
