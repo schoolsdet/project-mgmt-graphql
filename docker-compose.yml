@@ -6,7 +6,7 @@ services:
     container_name: client
     restart: always
     ports:
-      - 3200:3200
+      - 127.0.0.1:3200:3200
     stdin_open: true
     environment:
       NODE_ENV: development
@@ -23,7 +23,7 @@ services:
     container_name: server
     restart: always
     ports:
-      - 5000:5000
+      - 127.0.0.1:5000:5000
     environment:
       MONGO_URI: mongodb://${MONGO_USER}:${MONGO_PASSWORD}@mongo:27017/project-mgmt-graphql
       NODE_ENV: development
