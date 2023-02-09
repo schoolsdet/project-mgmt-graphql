@@ -11,6 +11,6 @@ RUN mkdir node_modules/.cache && chmod -R 777 node_modules/.cache
 
 COPY . /app
 
-EXPOSE 3230
+EXPOSE 3000
 
 CMD ["npm", "start"]
